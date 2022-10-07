@@ -1,5 +1,7 @@
 import re, json, requests
-from secrets import accessToken
+from turtle import update
+from secrets import *
+from time import sleep
 import tweepy
 
 def getStars(account):
@@ -11,20 +13,17 @@ def getStars(account):
             stars.append(object["full_name"])
     return stars
 
-def getRepoNameByID(id):
-    return 
-
 def storeJSON(jsonStore):
 
     json_object = json.dumps(jsonStore, indent=4)
 
-    with open("accounts.json", "w") as outfile:
+    with open("stars.json", "w") as outfile:
         outfile.write(json_object)
 
 def dbGen():
 
-    with open('accounts.txt') as f:
-        accounts = f.read().splitlines()
+    with open('accounts.json') as f:
+        accounts = [account for account in json.load(f)]
 
     jsonStore = {}
 
@@ -34,21 +33,35 @@ def dbGen():
 
     json_object = json.dumps(jsonStore, indent=4)
 
-    with open("accounts.json", "w") as outfile:
-        outfile.write(json_object)
+    storeJSON(json_object)
+
+def detectNameChange(repoName):
+    if requests.get("https://github.com/{}".format(repoName)).status_code == 302:
+        return requests.get("https://github.com/{}".format(repoName)).url[19:]
+    else:
+        return repoName
 
 def notifyTwitter(account, repo):
-    pass
+    client.create_tweet(text="{} has just starred {}!".format(names[account], repo))
 
-if __name__ == "__main__":
+
+def main():
+    client = tweepy.Client(
+        consumer_key=twitterAPIKey,
+        consumer_secret=twitterAPIKeySecret,
+        access_token=twitterAccessToken,
+        access_token_secret=twitterAccessTokenSecret
+    )
+
     try:
-        with open("accounts.json", "r") as f:
+        with open("stars.json", "r") as f:
             data_json = json.load(f)
     except FileNotFoundError:
         dbGen()
 
-    with open('accounts.txt') as f:
-        accounts = f.read().splitlines()
+    with open('accounts.json') as f:
+        names = json.load(f)
+        accounts = names.keys
     
     if accounts != data_json.keys():
         newAccounts, deletedAccounts = [], []
@@ -66,10 +79,22 @@ if __name__ == "__main__":
             workingAccounts.remove(account)
         except ValueError:
             pass
+    
+    updatedStars = {}
 
     for account in workingAccounts:
         stars = getStars(account)
+        updatedStars[account] = stars
         for star in stars:
-            print(account, data_json[account])
             if star not in data_json[account]:
-                    notifyTwitter(account, star)
+                for Star in stars.remove(star):
+                    if detectNameChange(Star) == star:
+                        continue
+                notifyTwitter(account, star)
+    
+    storeJSON(updatedStars)
+
+if __name__ == "__main__":
+    while True:
+        main()
+        sleep(3600)

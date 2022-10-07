@@ -1,2 +1,0 @@
-# GitHubStarTracker
-# GitHubStarTracker

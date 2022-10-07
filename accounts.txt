@@ -1,3 +1,6 @@
-norvig
-geohot
-karpathy
+{
+        #"username": "realname"
+        "norvig": "Peter Norvig"
+        "geohot": "George Hotz"
+        "karpathy": "Andrej Karpathy"
+}

@@ -1,0 +1,3 @@
+norvig
+geohot
+karpathy

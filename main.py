@@ -1,6 +1,6 @@
 import re, json, requests
 from turtle import update
-from secrets import *
+from .secrets import *
 from time import sleep
 import tweepy
 
@@ -61,15 +61,15 @@ def main():
 
     with open('accounts.json') as f:
         names = json.load(f)
-        accounts = names.keys
+        accounts = list(names.keys())
     
-    if accounts != data_json.keys():
+    if accounts != list(data_json.keys()):
         newAccounts, deletedAccounts = [], []
 
         for account in accounts:
-            if account not in data_json.keys():
+            if account not in list(data_json.keys()):
                 newAccounts.append(account)
-        for account in data_json.keys():
+        for account in list(data_json.keys()):
             if account not in accounts:
                 deletedAccounts.append(account)
 
@@ -87,10 +87,13 @@ def main():
         updatedStars[account] = stars
         for star in stars:
             if star not in data_json[account]:
-                for Star in stars.remove(star):
+                Stars = stars
+                Stars.remove(star)
+                for Star in Stars:
                     if detectNameChange(Star) == star:
                         continue
-                notifyTwitter(account, star)
+                print(account,star)
+                #notifyTwitter(account, star)
     
     storeJSON(updatedStars)
 
